@@ -1,15 +1,15 @@
 from botal.handler import Handler
-from botal.messengesrs import Terminal, Vk
+from botal.messengesrs import Terminal, Telegram
 
 # This is handler for the terminal
 handler = Handler([Terminal()])
 
 
-# Or you can use the handler for vk
-# handler = Handler([Vk(login='Your vk login', password='Your vk password')])
+# Or you can use the handler for telegram
+# handler = Handler([Telegram(token='Your telegram bot token')])
 
-# Or for terminal and vk both
-# handler = Handler([Terminal, Vk(login='Your vk login', password='Your vk password')])
+# Or for terminal and telegram both
+# handler = Handler([Terminal(), Telegram(token='Your telegram bot token')])
 
 # This annotation indicates that this function will be called when message is received from a new user
 @handler.handler()
