@@ -37,12 +37,15 @@ class Vk(Messenger):
         }
 
         vk_type, upload_method = upload_methods[attachment.file_type]
-        filename = '.botaltmp.' + attachment.file_ext
-        urllib.request.urlretrieve(attachment.url, filename)
-        try:
-            uploaded = upload_method(filename)[0]
-        finally:
-            remove(filename)
+        if attachment.url.startswith('file://'):
+            uploaded = upload_method(attachment.url[len('file://'):])[0]
+        else:
+            filename = '.botaltmp.' + attachment.file_ext
+            urllib.request.urlretrieve(attachment.url, filename)
+            try:
+                uploaded = upload_method(filename)[0]
+            finally:
+                remove(filename)
 
         vk_attachment = '{}{}_{}'.format(vk_type, uploaded['owner_id'], uploaded['id'])
         attachment.cache(vk_attachment, self)
