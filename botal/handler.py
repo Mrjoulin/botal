@@ -33,12 +33,16 @@ class Handler:
 
         message = Message(text=message.text, attachments=message.attachments)
         result = message_handler.send(message)
-        next(message_handler)
+
+        if result is None:
+            return
 
         if isinstance(result, (list, tuple)) and len(result) == 2:
             answer, attachments = result
+            if answer is None:
+                answer = ''
         else:
-            answer, attachments = result, None
+            answer, attachments = result, []
 
         user_info.messenger.send_message(user_info.user_id, answer, attachments)
 
