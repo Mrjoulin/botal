@@ -20,15 +20,14 @@ class Vk(Messenger):
         self.upload = VkUpload(self.sess)
         self.lp = longpoll.VkLongPoll(self.sess)
 
-        self.cached_uploads = {}
-
     def _upload_attachment(self, attachment):
         if attachment.url.startswith('https://vk.com/'):
             result = re.findall('(photo|video|audio|doc|wall|market)(-?\d+)_(\d+)', attachment.url)[0]
             return '{}{}_{}'.format(*result)
 
-        if attachment.url in self.cached_uploads and attachment.cache:
-            return self.cached_uploads[attachment.url]
+        cached = attachment.get_cached(self)
+        if cached is not None:
+            return cached
 
         upload_methods = {
             'image': ('photo', lambda x: self.upload.photo_messages([x])),
@@ -46,8 +45,7 @@ class Vk(Messenger):
             remove(filename)
 
         vk_attachment = '{}{}_{}'.format(vk_type, uploaded['owner_id'], uploaded['id'])
-        if attachment.cache:
-            self.cached_uploads[attachment.url] = vk_attachment
+        attachment.cache(vk_attachment, self)
         return vk_attachment
 
     def listen(self):
