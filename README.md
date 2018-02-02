@@ -2,14 +2,15 @@
 Botal is a Python microfraemwork for creating bots for **any** messenger in list bellow. Write code once and use on any messenger. In addition, your code will be simple as a console application. Look at this example ([with comments](https://github.com/dvec/botal/tree/master/examples/helloworld/helloworld.py)):
 ```python
 from botal.handler import Handler
+from botal.datatypes import Message
 from botal.messengesrs import Terminal, Telegram
 
 handler = Handler([Terminal(), Telegram(token='Your telegram bot token')])
 
-@handler.handler()
-def on_message(user_info):
+@handler.handler
+def on_message(user):
     while True:
-        yield 'You typed: ' + (yield).text
+        user.send(Message('You typed: ' + (yield).text))
 
 if __name__ == '__main__':
     handler.run_handler()

@@ -2,7 +2,7 @@ import json
 
 import requests
 
-from botal.datatypes import Message, UserInfo
+from botal.datatypes import Message, User
 from botal.messengesrs.messenger import Messenger
 
 
@@ -56,9 +56,9 @@ class Telegram(Messenger):
             for update in result['result']:
                 offset = max(offset if offset else 0, update['update_id']) + 1
 
-                yield Message(update['message']['text'], None), UserInfo(update['message']['chat']['id'], self)
+                yield User(update['message']['chat']['id'], self), Message(update['message']['text'], None)
 
-    def send_message(self, user_id, text, attachments):
-        self._call_method('sendMessage', params={'chat_id': user_id, 'text': text}, files={})
-        for attachment in attachments:
-            self._send_attachment(user_id, attachment)
+    def send_message(self, user, message):
+        self._call_method('sendMessage', params={'chat_id': user.user_id, 'text': message.text}, files={})
+        for attachment in message.attachments:
+            self._send_attachment(user.user_id, attachment)

@@ -9,5 +9,5 @@ class Messenger(metaclass=ABCMeta):
 
     # Send message to user
     @abstractmethod
-    def send_message(self, user_id, text, attachments):
+    def send_message(self, user, message):
         pass
