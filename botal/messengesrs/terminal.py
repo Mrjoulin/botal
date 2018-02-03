@@ -1,4 +1,4 @@
-from botal.datatypes import Message, User
+from botal.message import Message
 from botal.messengesrs.messenger import Messenger
 
 
@@ -8,7 +8,11 @@ class Terminal(Messenger):
 
     def listen(self):
         while True:
-            yield User(self.user_id, self), Message(input(), None)
+            yield self.user_id, Message(input(), None)
 
-    def send_message(self, user, message):
-        print(message.text)
+    def call(self, name, **kwargs):
+        raise NotImplementedError
+
+    def send(self, user_id, message):
+        print(message.text, message.attachments)
+        return message

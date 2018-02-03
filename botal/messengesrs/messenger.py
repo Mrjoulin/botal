@@ -2,12 +2,16 @@ from abc import ABCMeta, abstractmethod
 
 
 class Messenger(metaclass=ABCMeta):
+    # Call API method
+    def call(self, name, **kwargs):
+        raise NotImplementedError
+
     # Check new messages and return if exists
     @abstractmethod
     def listen(self):
-        pass
+        raise NotImplementedError
 
     # Send message to user
     @abstractmethod
-    def send_message(self, user, message):
-        pass
+    def send(self, user_id, message):
+        raise NotImplementedError

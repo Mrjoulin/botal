@@ -6,7 +6,7 @@ import vk_api
 from vk_api import longpoll, VkUpload
 from vk_api.longpoll import VkEventType
 
-from botal.datatypes import Message, User
+from botal.message import Message
 from botal.messengesrs.messenger import Messenger
 
 
@@ -54,14 +54,25 @@ class Vk(Messenger):
     def listen(self):
         for event in self.lp.listen():
             if event.type == VkEventType.MESSAGE_NEW and event.to_me:
-                yield User(event.user_id, self), Message(event.text, event.attachments)
+                yield event.user_id, Message(event.text, event.attachments, message_id=event.message_id)
 
-    def send_message(self, user, message):
+    def call(self, name, **kwargs):
+        self.sess.method(name, values=kwargs)
+
+    def send(self, user_id, message):
         to_upload = []
+        forward_messages_id = []
         for attachment in message.attachments:
-            to_upload.append(attachment)
+            if isinstance(attachment, Message):
+                forward_messages_id.append(attachment.message_id)
+            else:
+                to_upload.append(attachment)
         attachments = []
+
         for url in to_upload:
             attachments.append(self._upload_attachment(url))
-
-        self.api.messages.send(user_id=user.user_id, message=message.text, attachment=','.join(attachments))
+        message.message_id = self.api.messages.send(user_id=user_id,
+                                                    message=message.text,
+                                                    attachment=','.join(attachments),
+                                                    forward_messages=','.join(map(str, forward_messages_id)))
+        return message

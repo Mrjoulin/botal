@@ -1,26 +1,23 @@
 import json
+from io import BufferedReader
+from queue import Queue
 
 import requests
 
-from botal.datatypes import Message, User
 from botal.messengesrs.messenger import Messenger
+from botal.message import Message
 
 
 class Telegram(Messenger):
     def __init__(self, token, timeout=10):
         self._api_url = 'https://api.telegram.org/bot{}'.format(token)
         self._timeout = timeout
-        self.cached_uploads = {}
-
-    def _call_method(self, method, params, files):
-        method_url = self._api_url + '/{}'.format(method)
-        result = requests.post(method_url, params=params, files=files)
-        parsed = json.loads(result.text)
-        return parsed
+        self._cached_uploads = {}
+        self._messages = Queue()
 
     def _send_attachment(self, chat_id, attachment):
-        if attachment.url in self.cached_uploads and attachment.cache:
-            return self.cached_uploads[attachment.url]
+        if attachment.url in self._cached_uploads and attachment.cache:
+            return self._cached_uploads[attachment.url]
 
         telegram_type = {
             'image': 'Photo',
@@ -28,22 +25,31 @@ class Telegram(Messenger):
             'audio': 'Audio',
             'application': 'Document'
         }[attachment.file_type]
+        type_lower = telegram_type.lower()
 
-        cached = attachment.get_cached(self)
-        if cached is not None:
-            message = self._call_method('send' + telegram_type,
-                                        params={'chat_id': chat_id, telegram_type.lower(): cached}, files={})
+        if attachment.cached_value is not None:
+            message = self.call('send' + telegram_type, **{'chat_id': chat_id, type_lower: attachment.cached_value})
         elif attachment.url.startswith('file://'):
             file = open(attachment.url[len('file://'):], 'rb')
-            message = self._call_method('send' + telegram_type,
-                                        params={'chat_id': chat_id}, files={telegram_type.lower(): file})
+            message = self.call('send' + telegram_type, **{'chat_id': chat_id, type_lower: file})
         else:
-            message = self._call_method('send' + telegram_type,
-                                        params={'chat_id': chat_id, telegram_type.lower(): attachment.url}, files={})
-
+            message = self.call('send' + telegram_type, **{'chat_id': chat_id, type_lower: attachment.url})
         file_id = message['result'][telegram_type.lower()][0]['file_id']
 
-        attachment.cache(file_id, self)
+        attachment.cache(file_id)
+
+    def call(self, name, **kwargs):
+        files = {}
+        new_params = {}
+        for key, value in kwargs.items():
+            if isinstance(value, BufferedReader):
+                files[key] = value
+            else:
+                new_params[key] = value
+        method_url = self._api_url + '/{}'.format(name)
+        result = requests.post(method_url, params=new_params, files=files)
+        parsed = json.loads(result.text)
+        return parsed
 
     def listen(self):
         offset = None
@@ -51,14 +57,14 @@ class Telegram(Messenger):
             params = {'timeout': self._timeout}
             if offset is not None:
                 params.update({'offset': offset})
-            result = self._call_method('getUpdates', params=params, files={})
-
+            result = self.call('getUpdates', **params)
             for update in result['result']:
                 offset = max(offset if offset else 0, update['update_id']) + 1
 
-                yield User(update['message']['chat']['id'], self), Message(update['message']['text'], None)
+                yield update['message']['chat']['id'], Message(update['message']['text'], None)
 
-    def send_message(self, user, message):
-        self._call_method('sendMessage', params={'chat_id': user.user_id, 'text': message.text}, files={})
+    def send(self, user_id, message):
+        self.call('sendMessage', chat_id=user_id, text=message.text)
         for attachment in message.attachments:
-            self._send_attachment(user.user_id, attachment)
+            self._send_attachment(user_id, attachment)
+        return message

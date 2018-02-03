@@ -1,40 +1,26 @@
-from queue import Queue
 from threading import Thread
 
-from botal.datatypes import Message
+from botal.user import User
 
 
 class Handler:
-    def __init__(self, messengers):
+    def __init__(self, messenger):
         self._message_handler = None
         self._mappings = {}
 
-        self.messengers = messengers
+        self.messenger = messenger
 
     def _listen(self):
-        queue = Queue()
+        for user_id, message in self.messenger.listen():
+            yield user_id, message
 
-        def listen_messenger(messenger_):
-            for user, message in messenger_.listen():
-                queue.put((user, message))
-
-        for messenger in self.messengers:
-            Thread(target=listen_messenger, args=[messenger], daemon=True).start()
-
-        while 1:
-            yield queue.get()
-
-    def _handle_message(self, user, message):
-        if user in self._mappings:
-            message_handler = self._mappings[user]
+    def _handle_message(self, user_id, message):
+        if user_id in self._mappings:
+            user = self._mappings[user_id]
         else:
-            message_handler = self._message_handler(user)
-            next(message_handler)
-
-        message = Message(message.text, attachments=message.attachments)
-
-        message_handler.send(message)
-        self._mappings[user] = message_handler
+            user = User(user_id, self._message_handler)
+            self._mappings[user_id] = user
+        user.handle(message)
 
     def handler(self, func):
         self._message_handler = func
@@ -42,7 +28,7 @@ class Handler:
 
     def run_handler(self):
         def handle():
-            for user, message in self._listen():
-                Thread(target=self._handle_message, args=[user, message], daemon=True).start()
+            for user_id, message in self._listen():
+                Thread(target=self._handle_message, args=[user_id, message], daemon=True).start()
 
         Thread(target=handle).run()
