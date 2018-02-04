@@ -6,7 +6,7 @@ from botal.messengesrs import Terminal
 handler = Handler(Terminal())
 
 # Or you can use the handler for telegram
-# handler = Handler([Telegram(token='Your telegram bot token')])
+# handler = Handler(Telegram(token='Your telegram bot token'))
 
 
 # This annotation indicates that this function will be called when message is received from a new user
