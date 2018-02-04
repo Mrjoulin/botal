@@ -1,23 +1,26 @@
 import json
 from io import BufferedReader
-from queue import Queue
 
 import requests
 
-from botal.messengesrs.messenger import Messenger
 from botal.message import Message
+from botal.messengesrs.messenger import Messenger
 
 
 class Telegram(Messenger):
-    def __init__(self, token, timeout=10):
-        self._api_url = 'https://api.telegram.org/bot{}'.format(token)
+    API_URL = 'https://api.telegram.org/bot{}'
+    DEFAULT_TIMEOUT = 10
+
+    def __init__(self, token, timeout=None):
+        if timeout is None:
+            timeout = self.DEFAULT_TIMEOUT
+
+        self._api_url = self.API_URL.format(token)
         self._timeout = timeout
-        self._cached_uploads = {}
-        self._messages = Queue()
 
     def _send_attachment(self, chat_id, attachment):
-        if attachment.url in self._cached_uploads and attachment.cache:
-            return self._cached_uploads[attachment.url]
+        if attachment.is_cached():
+            return attachment.cached_value
 
         telegram_type = {
             'image': 'Photo',
@@ -25,18 +28,19 @@ class Telegram(Messenger):
             'audio': 'Audio',
             'application': 'Document'
         }[attachment.file_type]
-        type_lower = telegram_type.lower()
 
-        if attachment.cached_value is not None:
-            message = self.call('send' + telegram_type, **{'chat_id': chat_id, type_lower: attachment.cached_value})
+        if attachment.is_cached():
+            value = attachment.cached
         elif attachment.url.startswith('file://'):
-            file = open(attachment.url[len('file://'):], 'rb')
-            message = self.call('send' + telegram_type, **{'chat_id': chat_id, type_lower: file})
+            value = open(attachment.url[len('file://'):], 'rb')
         else:
-            message = self.call('send' + telegram_type, **{'chat_id': chat_id, type_lower: attachment.url})
+            value = attachment.url
+
+        message = self.call('send' + telegram_type, **{'chat_id': chat_id, telegram_type.lower(): value})
+
         file_id = message['result'][telegram_type.lower()][0]['file_id']
 
-        attachment.cache(file_id)
+        attachment.cached = file_id
 
     def call(self, name, **kwargs):
         files = {}

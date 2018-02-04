@@ -25,9 +25,8 @@ class Vk(Messenger):
             result = re.findall('(photo|video|audio|doc|wall|market)(-?\d+)_(\d+)', attachment.url)[0]
             return '{}{}_{}'.format(*result)
 
-        cached = attachment.get_cached(self)
-        if cached is not None:
-            return cached
+        if attachment.is_cached():
+            return attachment.cached
 
         upload_methods = {
             'image': ('photo', lambda x: self.upload.photo_messages([x])),
@@ -37,7 +36,7 @@ class Vk(Messenger):
         }
 
         vk_type, upload_method = upload_methods[attachment.file_type]
-        if attachment.url.startswith('file://'):
+        if attachment.is_file():
             uploaded = upload_method(attachment.url[len('file://'):])[0]
         else:
             filename = '.botaltmp.' + attachment.file_ext
@@ -48,7 +47,7 @@ class Vk(Messenger):
                 remove(filename)
 
         vk_attachment = '{}{}_{}'.format(vk_type, uploaded['owner_id'], uploaded['id'])
-        attachment.cache(vk_attachment, self)
+        attachment.cached = vk_attachment
         return vk_attachment
 
     def listen(self):
