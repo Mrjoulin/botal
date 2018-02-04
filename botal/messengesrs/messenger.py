@@ -3,6 +3,7 @@ from abc import ABCMeta, abstractmethod
 
 class Messenger(metaclass=ABCMeta):
     # Call API method
+    @abstractmethod
     def call(self, name, **kwargs):
         raise NotImplementedError
 
