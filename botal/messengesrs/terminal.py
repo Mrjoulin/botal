@@ -3,7 +3,13 @@ from botal.messengesrs.messenger import Messenger
 
 
 class Terminal(Messenger):
-    def __init__(self, user_id=-1):
+    DEFAULT_USER_ID = -1
+    ATTACHMENT_PATTERN = "Attachment: url='{url}', use_cached={_use_cached}, mime='{file_type}/{file_ext}'"
+
+    def __init__(self, user_id=None):
+        if user_id is None:
+            user_id = self.DEFAULT_USER_ID
+
         self.user_id = user_id
 
     def listen(self):
@@ -14,5 +20,7 @@ class Terminal(Messenger):
         raise NotImplementedError
 
     def send(self, user_id, message):
-        print(message.text, message.attachments)
+        print(message.text)
+        for attachment in message.attachments:
+            print(self.ATTACHMENT_PATTERN.format(**attachment.__dict__))
         return message
