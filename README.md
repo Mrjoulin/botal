@@ -3,9 +3,9 @@ Botal is a Python microfraemwork for creating bots for **any** messenger in list
 ```python
 from botal.handler import Handler
 from botal.message import Message
-from botal.messengesrs import Telegram
+from botal.messengesrs import TelegramMessenger
 
-handler = Handler(Telegram(token='Your telegram bot token'))
+handler = Handler(TelegramMessenger(token='Your telegram bot token'))
 
 @handler.handler
 def on_message(user_id):
@@ -14,6 +14,8 @@ def on_message(user_id):
 
 if __name__ == '__main__':
     handler.run_handler()
+    while True:
+        pass
 ```
 This code will respond on any message from telegram. Why do you need to choice botal?
 * Simple code

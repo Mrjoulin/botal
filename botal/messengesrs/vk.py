@@ -7,10 +7,10 @@ from vk_api import longpoll, VkUpload
 from vk_api.longpoll import VkEventType
 
 from botal.message import Message
-from botal.messengesrs.messenger import Messenger
+from botal.messengesrs.messenger import IMessenger
 
 
-class Vk(Messenger):
+class VkMessenger(IMessenger):
     def __init__(self, login=None, password=None, token=None):
         self.sess = vk_api.VkApi(login=login, password=password, token=token)
         if not token:

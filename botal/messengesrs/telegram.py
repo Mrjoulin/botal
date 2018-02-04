@@ -4,10 +4,10 @@ from io import BufferedReader
 import requests
 
 from botal.message import Message
-from botal.messengesrs.messenger import Messenger
+from botal.messengesrs.messenger import IMessenger
 
 
-class Telegram(Messenger):
+class TelegramMessenger(IMessenger):
     API_URL = 'https://api.telegram.org/bot{}'
     DEFAULT_TIMEOUT = 10
 

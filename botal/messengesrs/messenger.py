@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 
 
-class Messenger(metaclass=ABCMeta):
+class IMessenger(metaclass=ABCMeta):
     # Call API method
     @abstractmethod
     def call(self, name, **kwargs):

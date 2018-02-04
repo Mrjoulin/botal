@@ -31,4 +31,4 @@ class Handler:
             for user_id, message in self._listen():
                 Thread(target=self._handle_message, args=[user_id, message], daemon=True).start()
 
-        Thread(target=handle).run()
+        Thread(target=handle, daemon=True).start()

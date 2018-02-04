@@ -1,8 +1,8 @@
 from botal.message import Message
-from botal.messengesrs.messenger import Messenger
+from botal.messengesrs.messenger import IMessenger
 
 
-class Terminal(Messenger):
+class TerminalMessenger(IMessenger):
     DEFAULT_USER_ID = -1
     ATTACHMENT_PATTERN = "Attachment: url='{url}', use_cached={_use_cached}, mime='{file_type}/{file_ext}'"
 

@@ -1,9 +1,9 @@
 from botal.handler import Handler
 from botal.message import Message
-from botal.messengesrs import Terminal
+from botal.messengesrs import TerminalMessenger
 
 # This is handler for the terminal
-handler = Handler(Terminal())
+handler = Handler(TerminalMessenger())
 
 # Or you can use the handler for telegram
 # handler = Handler(Telegram(token='Your telegram bot token'))
@@ -24,6 +24,8 @@ def on_message(user_id):
 if __name__ == '__main__':
     # Finally, we need to run handler
     handler.run_handler()
+    while True:
+        pass
 
 # Now run this code and type something in terminal. You will see something like this:
 # Hello!
