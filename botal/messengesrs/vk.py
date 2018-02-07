@@ -6,7 +6,7 @@ import vk_api
 from vk_api import longpoll, VkUpload
 from vk_api.longpoll import VkEventType
 
-from botal.message import Message
+from botal.message import Message, SentMessageData
 from botal.messengesrs.messenger import IMessenger
 
 
@@ -54,7 +54,7 @@ class VkMessenger(IMessenger):
         for event in self.lp.listen():
             if event.type == VkEventType.MESSAGE_NEW and event.to_me:
                 message = Message(event.text, attachments=event.attachments)
-                message.save_message_info(event.user_id, self)
+                message.sent_message_data = SentMessageData(event.user_id, self)
 
                 yield event.user_id, message
 
@@ -66,7 +66,7 @@ class VkMessenger(IMessenger):
         forward_messages_id = []
         for attachment in message.attachments:
             if isinstance(attachment, Message):
-                forward_messages_id.append(attachment.uuid.message_id)
+                forward_messages_id.append(attachment.sent_message_data.message_id)
             else:
                 to_upload.append(attachment)
         attachments = []
@@ -77,5 +77,5 @@ class VkMessenger(IMessenger):
                                             message=message.text,
                                             attachment=','.join(attachments),
                                             forward_messages=','.join(map(str, forward_messages_id)))
-        message.save_message_info(message_id, self)
+        message.sent_message_data = SentMessageData(message_id, self)
         return message
