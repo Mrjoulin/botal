@@ -53,7 +53,10 @@ class VkMessenger(IMessenger):
     def listen(self):
         for event in self.lp.listen():
             if event.type == VkEventType.MESSAGE_NEW and event.to_me:
-                yield event.user_id, Message(event.text, event.attachments, message_id=event.message_id)
+                message = Message(event.text, attachments=event.attachments)
+                message.save_message_info(event.user_id, self)
+
+                yield event.user_id, message
 
     def call(self, name, **kwargs):
         self.sess.method(name, values=kwargs)
@@ -63,15 +66,16 @@ class VkMessenger(IMessenger):
         forward_messages_id = []
         for attachment in message.attachments:
             if isinstance(attachment, Message):
-                forward_messages_id.append(attachment.message_id)
+                forward_messages_id.append(attachment.uuid.message_id)
             else:
                 to_upload.append(attachment)
         attachments = []
 
         for url in to_upload:
             attachments.append(self._upload_attachment(url))
-        message.message_id = self.api.messages.send(user_id=user_id,
-                                                    message=message.text,
-                                                    attachment=','.join(attachments),
-                                                    forward_messages=','.join(map(str, forward_messages_id)))
+        message_id = self.api.messages.send(user_id=user_id,
+                                            message=message.text,
+                                            attachment=','.join(attachments),
+                                            forward_messages=','.join(map(str, forward_messages_id)))
+        message.save_message_info(message_id, self)
         return message
