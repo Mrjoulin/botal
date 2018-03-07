@@ -1,12 +1,17 @@
-from botal.handler import Handler
-from botal.message import Message
-from botal.messengesrs import TerminalMessenger
+from vk_api.longpoll import VkLongPoll
+
+from botal import Botal
+from vk_api import VkApi
+
+sess = VkApi(token='542fd143eafa5c755664f93abfed529afab4869aa780cd8c5714c8bbdb1919539168a1453d225356bc34c')
+api = sess.get_api()
+lp = VkLongPoll(sess)
 
 # This is handler for the terminal
-handler = Handler(TerminalMessenger())
+handler = Botal(filter(lambda x: x.to_me, lp.listen()), lambda x: x.user_id)
 
 # Or you can use the handler for telegram
-# handler = Handler(Telegram(token='Your telegram bot token'))
+# handler = Botal(Telegram(token='Your telegram bot token'))
 
 
 # This annotation indicates that this function will be called when message is received from a new user
@@ -18,14 +23,12 @@ def on_message(user_id):
         # message is an instance of the Message object
         message = yield
         # You can send message to the user by calling this function
-        handler.messenger.send(user_id, Message('You typed: "{}"'.format(message.text)))
+        api.messages.send(user_id=user_id, message='You typed: "{}"'.format(message.text))
 
 
 if __name__ == '__main__':
     # Finally, we need to run handler
-    handler.run_handler()
-    while True:
-        pass
+    handler.run()
 
 # Now run this code and type something in terminal. You will see something like this:
 # Hello!
