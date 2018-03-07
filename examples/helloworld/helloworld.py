@@ -3,7 +3,7 @@ from vk_api.longpoll import VkLongPoll
 from botal import Botal
 from vk_api import VkApi
 
-sess = VkApi(token='542fd143eafa5c755664f93abfed529afab4869aa780cd8c5714c8bbdb1919539168a1453d225356bc34c')
+sess = VkApi(token='SECRET')
 api = sess.get_api()
 lp = VkLongPoll(sess)
 
