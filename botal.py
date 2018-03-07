@@ -22,6 +22,7 @@ class Botal:
 
     def __init__(self, generator, uuid):
         self._message_handler = None
+        self._error_handlers = []
         self._mappings = {}
 
         self.generator = generator
@@ -33,11 +34,26 @@ class Botal:
         else:
             user = self._ThreadSafeGenerator(user_id, self._message_handler)
             self._mappings[user_id] = user
-        user.send(message)
+        try:
+            user.send(message)
+        except Exception as e:
+            del self._mappings[user_id]
+            print(self._error_handlers, e.__class__)
+            for e_, f in self._error_handlers:
+                if isinstance(e, e_):
+                    f(e)
+                else:
+                    raise e
 
     def handler(self, func):
         self._message_handler = func
         return func
+
+    def error_handler(self, error):
+        def decorator(func):
+            self._error_handlers.append((error, func))
+            return func
+        return decorator
 
     def run(self):
         def handle():
@@ -45,6 +61,7 @@ class Botal:
                 uuid = self.uuid(event)
                 Thread(target=self._handle_message, args=[uuid, event], daemon=True).start()
 
+        assert self._message_handler
         thread = Thread(target=handle, daemon=True)
         thread.start()
         thread.join()
