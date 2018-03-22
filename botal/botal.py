@@ -38,12 +38,12 @@ class Botal:
             user.send(message)
         except Exception as e:
             del self._mappings[user_id]
-            print(self._error_handlers, e.__class__)
             for e_, f in self._error_handlers:
                 if isinstance(e, e_):
                     f(e)
-                else:
-                    raise e
+                    break
+            else:
+                raise e
 
     def handler(self, func):
         self._message_handler = func
