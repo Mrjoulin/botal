@@ -40,7 +40,7 @@ class Botal:
             del self._mappings[user_id]
             for e_, f in self._error_handlers:
                 if isinstance(e, e_):
-                    f(e)
+                    f(user_id, e)
                     break
             else:
                 raise e
