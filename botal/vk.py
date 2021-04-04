@@ -2,6 +2,7 @@ from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 from vk_api.exceptions import ApiError
 from vk_api.vk_api import VkApiGroup
 from vk_api.upload import VkUpload
+from io import BytesIO
 import requests
 import logging
 import time
@@ -118,6 +119,46 @@ class VkBot(Botal):
         objects_list[api_index]["last_usage"] = time.time()
         # Return object
         return objects_list[api_index]["object"]
+
+    def upload_photo(self, bytes_photo: bytes) -> str:
+        try:
+            byte_file = BytesIO(bytes_photo)
+            byte_file.seek(0)
+            # noinspection PyTypeChecker
+            info = self.get_upload().photo_messages(photos=byte_file)[0]
+
+            attachment_file = "photo{owner_id}_{attachment_id}".format(
+                owner_id=info['owner_id'],
+                attachment_id=info['id']
+            )
+
+            return attachment_file
+        except Exception as e:
+            logging.error("Error while uploading photo: %s" % e)
+
+            return ""
+
+    def upload_document(self, bytes_document: bytes, peer_id: int, document_title: str = "image.png") -> str:
+        try:
+            file = BytesIO(bytes_document)
+            file.seek(0)
+            # noinspection PyTypeChecker
+            info = self.get_upload().document_message(doc=file, title=document_title, peer_id=peer_id)["doc"]
+
+            attachment_file = "doc{owner_id}_{attachment_id}".format(
+                owner_id=info['owner_id'],
+                attachment_id=info['id']
+            )
+
+            return attachment_file
+        except Exception as e:
+            logging.error("Error while uploading photo: %s" % e)
+
+            return ""
+
+    def restart_bot(self):
+        logging.info('Reset mappings')
+        self._mappings = {}
 
     # To call API methods just: bot.messages.send(...)
     def __getattr__(self, method):
